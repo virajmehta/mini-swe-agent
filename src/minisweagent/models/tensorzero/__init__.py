@@ -13,7 +13,6 @@ logger = logging.getLogger("tensorzero_model")
 
 @dataclass
 class TensorZeroModelConfig:
-    model_name: str
     config_file: Path
 
 

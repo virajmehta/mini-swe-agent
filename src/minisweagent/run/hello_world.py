@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+from minisweagent.models.tensorzero import TensorZeroModel
 import typer
 import yaml
 
@@ -24,7 +25,7 @@ def main(
     ),
 ) -> DefaultAgent:
     agent = DefaultAgent(
-        LitellmModel(model_name=model_name),
+        TensorZeroModel(config_file="/Users/viraj/tensorzero/mini-swe-agent/src/minisweagent/models/tensorzero/tensorzero.toml"),
         LocalEnvironment(),
         **yaml.safe_load(Path(package_dir / "config" / "default.yaml").read_text())["agent"],
     )
