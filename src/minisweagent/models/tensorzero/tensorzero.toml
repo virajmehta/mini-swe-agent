@@ -1,0 +1,40 @@
+gateway.debug = true
+[models.gpt-5]
+routing = ["openai"]
+
+[models.gpt-5.providers.openai]
+type = "openai"
+model_name = "gpt-5-2025-08-07"
+
+[models.gpt-5-mini]
+routing = ["openai"]
+
+[models.gpt-5-mini.providers.openai]
+type = "openai"
+model_name = "gpt-5-mini-2025-08-07"
+
+[models.claude-4-sonnet]
+routing = ["anthropic"]
+
+[models.claude-4-sonnet.providers.anthropic]
+type = "anthropic"
+model_name = "claude-sonnet-4-20250514"
+
+
+[functions.swe_agent]
+type = "chat"
+
+[functions.swe_agent.variants.gpt-5]
+weight = 0
+type = "chat_completion"
+model = "gpt-5"
+
+[functions.swe_agent.variants.gpt-5-mini]
+weight = 0
+type = "chat_completion"
+model = "gpt-5-mini"
+
+[functions.swe_agent.variants.claude-4-sonnet]
+weight = 1
+type = "chat_completion"
+model = "claude-4-sonnet"
