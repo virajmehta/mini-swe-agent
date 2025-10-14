@@ -1,7 +1,8 @@
 import logging
 import os
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass
 from pathlib import Path
+from typing import Any
 from openai import OpenAI
 from tensorzero import patch_openai_client
 from tensorzero.util import uuid7
@@ -52,3 +53,6 @@ class TensorZeroModel:
             # type: ignore
             "content": response.choices[0].message.content or "",
         }
+
+    def get_template_vars(self) -> dict[str, Any]:
+        return asdict(self.config) | {"n_model_calls": self.n_calls, "model_cost": self.cost}
