@@ -1,13 +1,11 @@
 """Basic agent class. See https://mini-swe-agent.com/latest/advanced/control_flow/ for visual explanation."""
 
-import os
-import platform
 import re
 import subprocess
 from collections.abc import Callable
 from dataclasses import asdict, dataclass
 
-from jinja2 import Template
+from jinja2 import StrictUndefined, Template
 
 from minisweagent import Environment, Model
 
@@ -61,19 +59,23 @@ class DefaultAgent:
         self.messages: list[dict] = []
         self.model = model
         self.env = env
+        self.extra_template_vars = {}
 
     def render_template(self, template: str, **kwargs) -> str:
-        cs = asdict(self.config) | asdict(self.env.config) | asdict(self.model.config) | platform.uname()._asdict()
-        return Template(template).render(**kwargs, **cs, **os.environ)
+        template_vars = asdict(self.config) | self.env.get_template_vars() | self.model.get_template_vars()
+        return Template(template, undefined=StrictUndefined).render(
+            **kwargs, **template_vars, **self.extra_template_vars
+        )
 
     def add_message(self, role: str, content: str, **kwargs):
         self.messages.append({"role": role, "content": content, **kwargs})
 
-    def run(self, task: str) -> tuple[str, str]:
+    def run(self, task: str, **kwargs) -> tuple[str, str]:
         """Run step() until agent is finished. Return exit status & message"""
+        self.extra_template_vars |= {"task": task, **kwargs}
         self.messages = []
         self.add_message("system", self.render_template(self.config.system_template))
-        self.add_message("user", self.render_template(self.config.instance_template, task=task))
+        self.add_message("user", self.render_template(self.config.instance_template))
         while True:
             try:
                 self.step()
@@ -104,7 +106,7 @@ class DefaultAgent:
 
     def parse_action(self, response: dict) -> dict:
         """Parse the action from the message. Returns the action."""
-        actions = re.findall(r"```bash\n(.*?)\n```", response["content"], re.DOTALL)
+        actions = re.findall(r"```bash\s*\n(.*?)\n```", response["content"], re.DOTALL)
         if len(actions) == 1:
             return {"action": actions[0].strip(), **response}
         raise FormatError(self.render_template(self.config.format_error_template, actions=actions))
@@ -124,6 +126,6 @@ class DefaultAgent:
 
     def has_finished(self, output: dict[str, str]):
         """Raises Submitted exception with final output if the agent has finished its task."""
-        lines = output.get("output", "").lstrip().splitlines()
+        lines = output.get("output", "").lstrip().splitlines(keepends=True)
         if lines and lines[0].strip() in ["MINI_SWE_AGENT_FINAL_OUTPUT", "COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT"]:
-            raise Submitted("\n".join(lines[1:]))
+            raise Submitted("".join(lines[1:]))

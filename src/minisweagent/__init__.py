@@ -8,7 +8,7 @@ This file provides:
   unless you want the static type checking.
 """
 
-__version__ = "1.7.0"
+__version__ = "1.14.2"
 
 import os
 from pathlib import Path
@@ -17,6 +17,8 @@ from typing import Any, Protocol
 import dotenv
 from platformdirs import user_config_dir
 from rich.console import Console
+
+from minisweagent.utils.log import logger
 
 package_dir = Path(__file__).resolve().parent
 
@@ -27,7 +29,7 @@ global_config_file = Path(global_config_dir) / ".env"
 if not os.getenv("MSWEA_SILENT_STARTUP"):
     Console().print(
         f"👋 This is [bold green]mini-swe-agent[/bold green] version [bold green]{__version__}[/bold green].\n"
-        f"Your config is stored in [bold green]'{global_config_file}'[/bold green]"
+        f"Loading global config from [bold green]'{global_config_file}'[/bold green]"
     )
 dotenv.load_dotenv(dotenv_path=global_config_file)
 
@@ -45,6 +47,8 @@ class Model(Protocol):
 
     def query(self, messages: list[dict[str, str]], **kwargs) -> dict: ...
 
+    def get_template_vars(self) -> dict[str, Any]: ...
+
 
 class Environment(Protocol):
     """Protocol for execution environments."""
@@ -53,6 +57,8 @@ class Environment(Protocol):
 
     def execute(self, command: str, cwd: str = "") -> dict[str, str]: ...
 
+    def get_template_vars(self) -> dict[str, Any]: ...
+
 
 class Agent(Protocol):
     """Protocol for agents."""
@@ -60,8 +66,18 @@ class Agent(Protocol):
     model: Model
     env: Environment
     messages: list[dict[str, str]]
+    config: Any
 
-    def run(self, task: str) -> tuple[str, str]: ...
+    def run(self, task: str, **kwargs) -> tuple[str, str]: ...
 
 
-__all__ = ["Agent", "Model", "Environment", "package_dir", "__version__", "global_config_file", "global_config_dir"]
+__all__ = [
+    "Agent",
+    "Model",
+    "Environment",
+    "package_dir",
+    "__version__",
+    "global_config_file",
+    "global_config_dir",
+    "logger",
+]

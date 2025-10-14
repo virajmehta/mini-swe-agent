@@ -4,7 +4,7 @@
 
 # The 100 line AI agent that solves GitHub issues & more
 
-📣 [Run `mini` with GPT-5 and friends: Read here](https://mini-swe-agent.com/latest/quickstart/#gpt-5)
+📣 [New blogpost: Randomly switching between GPT-5 and Sonnet 4 boosts performance](https://www.swebench.com/SWE-bench/blog/2025/08/19/mini-roulette/)
 
 [![Docs](https://img.shields.io/badge/Docs-green?style=for-the-badge&logo=materialformkdocs&logoColor=white)](https://mini-swe-agent.com/latest/)
 [![Slack](https://img.shields.io/badge/Slack-4A154B?style=for-the-badge&logo=slack&logoColor=white)](https://join.slack.com/t/swe-bench/shared_invite/zt-36pj9bu5s-o3_yXPZbaH2wVnxnss1EkQ)
@@ -24,7 +24,7 @@ Here's some details:
 
 - **Minimal**: Just [100 lines of python](https://github.com/SWE-agent/mini-swe-agent/blob/main/src/minisweagent/agents/default.py) (+100 total for [env](https://github.com/SWE-agent/mini-swe-agent/blob/main/src/minisweagent/environments/local.py),
 [model](https://github.com/SWE-agent/mini-swe-agent/blob/main/src/minisweagent/models/litellm_model.py), [script](https://github.com/SWE-agent/mini-swe-agent/blob/main/src/minisweagent/run/hello_world.py)) — no fancy dependencies!
-- **Powerful:** Resolves 65% of GitHub issues in the [SWE-bench verified benchmark](https://www.swebench.com/) ([leaderboard](https://swe-bench.com/)).
+- **Powerful:** Resolves >70% of GitHub issues in the [SWE-bench verified benchmark](https://www.swebench.com/) ([leaderboard](https://swe-bench.com/)).
 - **Convenient:** Comes with UIs that turn this into your daily dev swiss army knife!
 - **Deployable:** In addition to local envs, you can use **docker**, **podman**, **singularity**, **apptainer**, and more
 - **Tested:** [![Codecov](https://img.shields.io/codecov/c/github/swe-agent/mini-swe-agent?style=flat-square)](https://codecov.io/gh/SWE-agent/mini-swe-agent)
@@ -168,7 +168,8 @@ agent.run("Write a sudoku game")
 * [Quick start](https://mini-swe-agent.com/latest/quickstart/)
 * [`mini`](https://mini-swe-agent.com/latest/usage/mini/)
 * [FAQ](https://mini-swe-agent.com/latest/faq/)
-* [Configuration](https://mini-swe-agent.com/latest/advanced/configuration/)
+* [Global configuration](https://mini-swe-agent.com/latest/advanced/global_configuration/)
+* [Yaml configuration files](https://mini-swe-agent.com/latest/advanced/yaml_configuration/)
 * [Power up](https://mini-swe-agent.com/latest/advanced/cookbook/)
 
 </td>
@@ -204,7 +205,8 @@ Read more in our [documentation](https://mini-swe-agent.com/latest/):
 
 * [Quick start guide](https://mini-swe-agent.com/latest/quickstart/)
 * More on [`mini`](https://mini-swe-agent.com/latest/usage/mini/) and [`mini -v`](https://mini-swe-agent.com/latest/usage/mini_v/)
-* [Configuration](https://mini-swe-agent.com/latest/advanced/configuration/)
+* [Global configuration](https://mini-swe-agent.com/latest/advanced/global_configuration/)
+* [Yaml configuration files](https://mini-swe-agent.com/latest/advanced/yaml_configuration/)
 * [Power up with the cookbook](https://mini-swe-agent.com/latest/advanced/cookbook/)
 * [FAQ](https://mini-swe-agent.com/latest/faq/)
 * [Contribute!](https://mini-swe-agent.com/latest/contributing/)

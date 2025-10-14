@@ -1,5 +1,5 @@
 import asyncio
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from typing import Any
 
 from swerex.deployment.docker import DockerDeployment
@@ -24,16 +24,24 @@ class SwerexDockerEnvironment:
         self.deployment = DockerDeployment(image=self.config.image, **self.config.deployment_extra_kwargs)
         asyncio.run(self.deployment.start())
 
-    def execute(self, command: str, cwd: str = "") -> dict[str, Any]:
+    def execute(self, command: str, cwd: str = "", *, timeout: int | None = None) -> dict[str, Any]:
         """Execute a command in the environment and return the raw output."""
         output = asyncio.run(
             self.deployment.runtime.execute(
                 RexCommand(
-                    command=command, shell=True, check=False, cwd=cwd or self.config.cwd, timeout=self.config.timeout
+                    command=command,
+                    shell=True,
+                    check=False,
+                    cwd=cwd or self.config.cwd,
+                    timeout=timeout or self.config.timeout,
+                    merge_output_streams=True,
                 )
             )
         )
         return {
-            "output": f"<stdout>\n{output.stdout}</stdout>\n<stderr>\n{output.stderr}</stderr>",
+            "output": output.stdout,
             "returncode": output.exit_code,
         }
+
+    def get_template_vars(self) -> dict[str, Any]:
+        return asdict(self.config)

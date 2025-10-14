@@ -1,5 +1,6 @@
 import json
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -32,7 +33,8 @@ def test_swebench_end_to_end(github_test_data, tmp_path, workers):
             output=str(tmp_path),
             workers=workers,
             filter_spec="swe-agent__test-repo-1",
-            config=package_dir / "config" / "extra" / "swebench.yaml",
+            config_spec=package_dir / "config" / "extra" / "swebench.yaml",
+            environment_class="docker",
         )
 
     traj_file_path = package_dir.parent.parent / "tests" / "test_data" / "github_issue.traj.json"
@@ -68,21 +70,21 @@ def test_get_image_name_with_existing_image_name():
 def test_get_image_name_without_image_name():
     """Test get_image_name when image_name needs to be constructed"""
     instance = {"instance_id": "swe-agent__test-repo__1"}
-    expected = "swebench/sweb.eval.x86_64.swe-agent_1776_test-repo_1776_1:latest"
+    expected = "docker.io/swebench/sweb.eval.x86_64.swe-agent_1776_test-repo_1776_1:latest"
     assert get_swebench_docker_image_name(instance) == expected
 
 
 def test_get_image_name_with_none_image_name():
     """Test get_image_name when image_name is explicitly None"""
     instance = {"image_name": None, "instance_id": "django__django__4.0"}
-    expected = "swebench/sweb.eval.x86_64.django_1776_django_1776_4.0:latest"
+    expected = "docker.io/swebench/sweb.eval.x86_64.django_1776_django_1776_4.0:latest"
     assert get_swebench_docker_image_name(instance) == expected
 
 
 def test_get_image_name_with_complex_instance_id():
     """Test get_image_name with complex instance_id containing multiple double underscores"""
     instance = {"instance_id": "project__sub__module__version__1.2.3"}
-    expected = "swebench/sweb.eval.x86_64.project_1776_sub_1776_module_1776_version_1776_1.2.3:latest"
+    expected = "docker.io/swebench/sweb.eval.x86_64.project_1776_sub_1776_module_1776_version_1776_1.2.3:latest"
     assert get_swebench_docker_image_name(instance) == expected
 
 
@@ -319,7 +321,7 @@ def test_redo_existing_false_skips_existing(github_test_data, tmp_path):
             workers=1,
             filter_spec="swe-agent__test-repo-1",
             redo_existing=False,
-            config=package_dir / "config" / "extra" / "swebench.yaml",
+            config_spec=package_dir / "config" / "extra" / "swebench.yaml",
         )
 
     # Should still have the original result
@@ -354,7 +356,8 @@ def test_redo_existing_true_overwrites_existing(github_test_data, tmp_path):
             workers=1,
             filter_spec="swe-agent__test-repo-1",
             redo_existing=True,
-            config=package_dir / "config" / "extra" / "swebench.yaml",
+            config_spec=package_dir / "config" / "extra" / "swebench.yaml",
+            environment_class="docker",
         )
 
     # Should have new result from deterministic model
@@ -386,6 +389,9 @@ class ExceptionModel:
         self.n_calls += 1
         raise self.exception_type(self.exception_message)
 
+    def get_template_vars(self) -> dict[str, Any]:
+        return asdict(self.config) | {"n_model_calls": self.n_calls, "model_cost": self.cost}
+
 
 @pytest.mark.slow
 @pytest.mark.parametrize("workers", [1, 2])
@@ -405,7 +411,8 @@ def test_exception_handling_in_agent_run(tmp_path, workers):
                 output=str(tmp_path),
                 workers=workers,
                 filter_spec="swe-agent__test-repo-1",
-                config=package_dir / "config" / "extra" / "swebench.yaml",
+                config_spec=package_dir / "config" / "extra" / "swebench.yaml",
+                environment_class="docker",
             )
 
     # Check that prediction file contains exception information
@@ -446,7 +453,8 @@ def test_different_exception_types(tmp_path, workers):
                 output=str(tmp_path),
                 workers=workers,
                 filter_spec="swe-agent__test-repo-1",
-                config=package_dir / "config" / "extra" / "swebench.yaml",
+                config_spec=package_dir / "config" / "extra" / "swebench.yaml",
+                environment_class="docker",
             )
 
     # Check trajectory file for correct exception type
@@ -475,7 +483,8 @@ def test_exception_handling_with_progress_manager(tmp_path):
                 output=str(tmp_path),
                 workers=2,  # Use multithreaded to test progress manager
                 filter_spec="swe-agent__test-repo-1",
-                config=package_dir / "config" / "extra" / "swebench.yaml",
+                config_spec=package_dir / "config" / "extra" / "swebench.yaml",
+                environment_class="docker",
             )
 
             # Verify progress manager methods were called
