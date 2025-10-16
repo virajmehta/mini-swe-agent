@@ -1970,8 +1970,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">cost_limit</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">"MSWEA_GLOBAL_COST_LIMIT"</span><span class="p">,</span> <span class="s2">"0"</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">call_limit</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">"MSWEA_GLOBAL_CALL_LIMIT"</span><span class="p">,</span> <span class="s2">"0"</span><span class="p">))</span>
         <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cost_limit</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_limit</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">"MSWEA_SILENT_STARTUP"</span><span class="p">):</span>
-            <span class="nb">print</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"Global cost/call limit: $</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">cost_limit</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> / </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">call_limit</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Global cost/call limit: $</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">cost_limit</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> / </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">call_limit</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cost</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Add a model call with its cost, checking limits."""</span>
@@ -1979,8 +1978,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_cost</span> <span class="o">+=</span> <span class="n">cost</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_n_calls</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">cost_limit</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cost</span> <span class="ow">or</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_limit</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_calls</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"Global cost/call limit exceeded: $</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_cost</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> / </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_calls</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Global cost/call limit exceeded: $</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_cost</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> / </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_calls</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">cost</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
@@ -2002,15 +2000,13 @@
     <span class="n">config</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
     <span class="n">config</span><span class="p">[</span><span class="s2">"model_name"</span><span class="p">]</span> <span class="o">=</span> <span class="n">resolved_model_name</span>
 
-    <span class="n">model_class</span> <span class="o">=</span> <span class="n">get_model_class</span><span class="p">(</span>
-        <span class="n">resolved_model_name</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"model_class"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span>
+    <span class="n">model_class</span> <span class="o">=</span> <span class="n">get_model_class</span><span class="p">(</span><span class="n">resolved_model_name</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"model_class"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span>
 
     <span class="k">if</span> <span class="p">(</span><span class="n">from_env</span> <span class="o">:=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">"MSWEA_MODEL_API_KEY"</span><span class="p">))</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">model_class</span><span class="p">))</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"DeterministicModel"</span><span class="p">):</span>
         <span class="n">config</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"model_kwargs"</span><span class="p">,</span> <span class="p">{})[</span><span class="s2">"api_key"</span><span class="p">]</span> <span class="o">=</span> <span class="n">from_env</span>
 
     <span class="k">if</span> <span class="p">(</span>
-        <span class="nb">any</span><span class="p">(</span><span class="n">s</span> <span class="ow">in</span> <span class="n">resolved_model_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"anthropic"</span><span class="p">,</span> <span class="s2">"sonnet"</span><span class="p">,</span> <span class="s2">"opus"</span><span class="p">,</span> <span class="s2">"claude"</span><span class="p">])</span>
+        <span class="nb">any</span><span class="p">(</span><span class="n">s</span> <span class="ow">in</span> <span class="n">resolved_model_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"anthropic"</span><span class="p">,</span> <span class="s2">"sonnet"</span><span class="p">,</span> <span class="s2">"opus"</span><span class="p">,</span> <span class="s2">"claude"</span><span class="p">])</span>
         <span class="ow">and</span> <span class="s2">"set_cache_control"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span>
     <span class="p">):</span>
         <span class="c1"># Select cache control for Anthropic models by default</span>
@@ -2029,8 +2025,7 @@
         <span class="k">return</span> <span class="n">from_config</span>
     <span class="k">if</span> <span class="n">from_env</span> <span class="o">:=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">"MSWEA_MODEL_NAME"</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">from_env</span>
-    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-        <span class="s2">"No default model set. Please run `mini-extra config setup` to set one."</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"No default model set. Please run `mini-extra config setup` to set one."</span><span class="p">)</span>
 
 
 <span class="n">_MODEL_CLASS_MAPPING</span> <span class="o">=</span> <span class="p">{</span>
@@ -2057,12 +2052,12 @@
             <span class="n">module</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="n">module_name</span><span class="p">)</span>
             <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">class_name</span><span class="p">)</span>
         <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">ImportError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">):</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"Unknown model class: </span><span class="si">{</span><span class="n">model_class</span><span class="si">}</span><span class="s2"> (resolved to </span><span class="si">{</span><span class="n">full_path</span><span class="si">}</span><span class="s2">, available: </span><span class="si">{</span>
-<span class="w">                </span><span class="n">_MODEL_CLASS_MAPPING</span><span class="si">}</span><span class="s2">)"</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"Unknown model class: </span><span class="si">{</span><span class="n">model_class</span><span class="si">}</span><span class="s2"> (resolved to </span><span class="si">{</span><span class="n">full_path</span><span class="si">}</span><span class="s2">, available: </span><span class="si">{</span><span class="n">_MODEL_CLASS_MAPPING</span><span class="si">}</span><span class="s2">)"</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="c1"># Default to TensorZeroModel</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">minisweagent.models.tensorzero</span><span class="w"> </span><span class="kn">import</span> <span class="n">TensorZeroModel</span>
+
     <span class="k">return</span> <span class="n">TensorZeroModel</span>
 </code></pre></div>
 </details>
@@ -2091,7 +2086,9 @@
 
             <details class="quote">
               <summary>Source code in <code>src/minisweagent/models/__init__.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">47</span>
+              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
 <span class="normal">48</span>
 <span class="normal">49</span>
 <span class="normal">50</span>
@@ -2109,11 +2106,7 @@
 <span class="normal">62</span>
 <span class="normal">63</span>
 <span class="normal">64</span>
-<span class="normal">65</span>
-<span class="normal">66</span>
-<span class="normal">67</span>
-<span class="normal">68</span>
-<span class="normal">69</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_model</span><span class="p">(</span><span class="n">input_model_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Model</span><span class="p">:</span>
+<span class="normal">65</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_model</span><span class="p">(</span><span class="n">input_model_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Model</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Get an initialized model object from any kind of user input or settings."""</span>
     <span class="n">resolved_model_name</span> <span class="o">=</span> <span class="n">get_model_name</span><span class="p">(</span><span class="n">input_model_name</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -2121,15 +2114,13 @@
     <span class="n">config</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
     <span class="n">config</span><span class="p">[</span><span class="s2">"model_name"</span><span class="p">]</span> <span class="o">=</span> <span class="n">resolved_model_name</span>
 
-    <span class="n">model_class</span> <span class="o">=</span> <span class="n">get_model_class</span><span class="p">(</span>
-        <span class="n">resolved_model_name</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"model_class"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span>
+    <span class="n">model_class</span> <span class="o">=</span> <span class="n">get_model_class</span><span class="p">(</span><span class="n">resolved_model_name</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"model_class"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span>
 
     <span class="k">if</span> <span class="p">(</span><span class="n">from_env</span> <span class="o">:=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">"MSWEA_MODEL_API_KEY"</span><span class="p">))</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">model_class</span><span class="p">))</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"DeterministicModel"</span><span class="p">):</span>
         <span class="n">config</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"model_kwargs"</span><span class="p">,</span> <span class="p">{})[</span><span class="s2">"api_key"</span><span class="p">]</span> <span class="o">=</span> <span class="n">from_env</span>
 
     <span class="k">if</span> <span class="p">(</span>
-        <span class="nb">any</span><span class="p">(</span><span class="n">s</span> <span class="ow">in</span> <span class="n">resolved_model_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"anthropic"</span><span class="p">,</span> <span class="s2">"sonnet"</span><span class="p">,</span> <span class="s2">"opus"</span><span class="p">,</span> <span class="s2">"claude"</span><span class="p">])</span>
+        <span class="nb">any</span><span class="p">(</span><span class="n">s</span> <span class="ow">in</span> <span class="n">resolved_model_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"anthropic"</span><span class="p">,</span> <span class="s2">"sonnet"</span><span class="p">,</span> <span class="s2">"opus"</span><span class="p">,</span> <span class="s2">"claude"</span><span class="p">])</span>
         <span class="ow">and</span> <span class="s2">"set_cache_control"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span>
     <span class="p">):</span>
         <span class="c1"># Select cache control for Anthropic models by default</span>
@@ -2163,18 +2154,17 @@
 
             <details class="quote">
               <summary>Source code in <code>src/minisweagent/models/__init__.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">72</span>
+              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
 <span class="normal">73</span>
 <span class="normal">74</span>
 <span class="normal">75</span>
 <span class="normal">76</span>
 <span class="normal">77</span>
-<span class="normal">78</span>
-<span class="normal">79</span>
-<span class="normal">80</span>
-<span class="normal">81</span>
-<span class="normal">82</span>
-<span class="normal">83</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_model_name</span><span class="p">(</span><span class="n">input_model_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="normal">78</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_model_name</span><span class="p">(</span><span class="n">input_model_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Get a model name from any kind of user input or settings."""</span>
     <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">config</span> <span class="o">=</span> <span class="p">{}</span>
@@ -2184,8 +2174,7 @@
         <span class="k">return</span> <span class="n">from_config</span>
     <span class="k">if</span> <span class="n">from_env</span> <span class="o">:=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">"MSWEA_MODEL_NAME"</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">from_env</span>
-    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-        <span class="s2">"No default model set. Please run `mini-extra config setup` to set one."</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"No default model set. Please run `mini-extra config setup` to set one."</span><span class="p">)</span>
 </code></pre></div></td></tr></tbody></table></div>
             </details>
     </div>
@@ -2216,7 +2205,12 @@ Otherwise, the model_name is used to select the best model class.</p>
 
             <details class="quote">
               <summary>Source code in <code>src/minisweagent/models/__init__.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 95</span>
+              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
 <span class="normal"> 96</span>
 <span class="normal"> 97</span>
 <span class="normal"> 98</span>
@@ -2232,12 +2226,7 @@ Otherwise, the model_name is used to select the best model class.</p>
 <span class="normal">108</span>
 <span class="normal">109</span>
 <span class="normal">110</span>
-<span class="normal">111</span>
-<span class="normal">112</span>
-<span class="normal">113</span>
-<span class="normal">114</span>
-<span class="normal">115</span>
-<span class="normal">116</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_model_class</span><span class="p">(</span><span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">model_class</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">type</span><span class="p">:</span>
+<span class="normal">111</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_model_class</span><span class="p">(</span><span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">model_class</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">type</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Select the best model class.</span>
 
 <span class="sd">    If a model_class is provided (as shortcut name, or as full import path,</span>
@@ -2252,12 +2241,12 @@ Otherwise, the model_name is used to select the best model class.</p>
             <span class="n">module</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="n">module_name</span><span class="p">)</span>
             <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">class_name</span><span class="p">)</span>
         <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">ImportError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">):</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"Unknown model class: </span><span class="si">{</span><span class="n">model_class</span><span class="si">}</span><span class="s2"> (resolved to </span><span class="si">{</span><span class="n">full_path</span><span class="si">}</span><span class="s2">, available: </span><span class="si">{</span>
-<span class="w">                </span><span class="n">_MODEL_CLASS_MAPPING</span><span class="si">}</span><span class="s2">)"</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"Unknown model class: </span><span class="si">{</span><span class="n">model_class</span><span class="si">}</span><span class="s2"> (resolved to </span><span class="si">{</span><span class="n">full_path</span><span class="si">}</span><span class="s2">, available: </span><span class="si">{</span><span class="n">_MODEL_CLASS_MAPPING</span><span class="si">}</span><span class="s2">)"</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="c1"># Default to TensorZeroModel</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">minisweagent.models.tensorzero</span><span class="w"> </span><span class="kn">import</span> <span class="n">TensorZeroModel</span>
+
     <span class="k">return</span> <span class="n">TensorZeroModel</span>
 </code></pre></div></td></tr></tbody></table></div>
             </details>
