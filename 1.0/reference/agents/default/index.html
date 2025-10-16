@@ -1302,9 +1302,9 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#minisweagent.agents.default.DefaultAgent.render_template" class="md-nav__link">
+  <a href="#minisweagent.agents.default.DefaultAgent.get_template_arguments" class="md-nav__link">
     <span class="md-ellipsis">
-      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;render_template
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;get_template_arguments
     </span>
   </a>
   
@@ -2232,9 +2232,9 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#minisweagent.agents.default.DefaultAgent.render_template" class="md-nav__link">
+  <a href="#minisweagent.agents.default.DefaultAgent.get_template_arguments" class="md-nav__link">
     <span class="md-ellipsis">
-      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;render_template
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;get_template_arguments
     </span>
   </a>
   
@@ -2374,6 +2374,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">asdict</span><span class="p">,</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">jinja2</span><span class="w"> </span><span class="kn">import</span> <span class="n">StrictUndefined</span><span class="p">,</span> <span class="n">Template</span>
 
@@ -2431,21 +2432,28 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="n">env</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">extra_template_vars</span> <span class="o">=</span> <span class="p">{}</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">render_template</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_template_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Get all template arguments by merging config, env, model, and extra vars."""</span>
         <span class="n">template_vars</span> <span class="o">=</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">)</span> <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">get_template_vars</span><span class="p">()</span> <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">get_template_vars</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">Template</span><span class="p">(</span><span class="n">template</span><span class="p">,</span> <span class="n">undefined</span><span class="o">=</span><span class="n">StrictUndefined</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(</span>
-            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span> <span class="o">**</span><span class="n">template_vars</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">extra_template_vars</span>
-        <span class="p">)</span>
+        <span class="n">all_vars</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">template_vars</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">extra_template_vars</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">}</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">add_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">role</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">content</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c1"># Convert Path objects to strings for JSON serialization</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">Path</span><span class="p">)</span> <span class="k">else</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">all_vars</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">role</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">content</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Add a message with either string content or template content blocks."""</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">"role"</span><span class="p">:</span> <span class="n">role</span><span class="p">,</span> <span class="s2">"content"</span><span class="p">:</span> <span class="n">content</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">})</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""Run step() until agent is finished. Return exit status &amp; message"""</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">extra_template_vars</span> <span class="o">|=</span> <span class="p">{</span><span class="s2">"task"</span><span class="p">:</span> <span class="n">task</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">messages</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">add_message</span><span class="p">(</span><span class="s2">"system"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">render_template</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">system_template</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">add_message</span><span class="p">(</span><span class="s2">"user"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">render_template</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">instance_template</span><span class="p">))</span>
+
+        <span class="c1"># TensorZero handles system prompts via variant config, not as a message</span>
+        <span class="c1"># So we only add the user message with the task/instance template</span>
+        <span class="n">instance_args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_template_arguments</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_message</span><span class="p">(</span><span class="s2">"user"</span><span class="p">,</span> <span class="p">[{</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"template"</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"instance"</span><span class="p">,</span> <span class="s2">"arguments"</span><span class="p">:</span> <span class="n">instance_args</span><span class="p">}])</span>
+
         <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
@@ -2470,8 +2478,10 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">get_observation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Execute the action and return the observation."""</span>
         <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_action</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parse_action</span><span class="p">(</span><span class="n">response</span><span class="p">))</span>
-        <span class="n">observation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">render_template</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">action_observation_template</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="n">output</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">add_message</span><span class="p">(</span><span class="s2">"user"</span><span class="p">,</span> <span class="n">observation</span><span class="p">)</span>
+
+        <span class="c1"># Add observation message with template block</span>
+        <span class="n">observation_args</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"output"</span><span class="p">:</span> <span class="n">output</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_message</span><span class="p">(</span><span class="s2">"user"</span><span class="p">,</span> <span class="p">[{</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"template"</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"action_observation"</span><span class="p">,</span> <span class="s2">"arguments"</span><span class="p">:</span> <span class="n">observation_args</span><span class="p">}])</span>
         <span class="k">return</span> <span class="n">output</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">parse_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
@@ -2479,18 +2489,25 @@
         <span class="n">actions</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s2">"```bash\s*\n(.*?)\n```"</span><span class="p">,</span> <span class="n">response</span><span class="p">[</span><span class="s2">"content"</span><span class="p">],</span> <span class="n">re</span><span class="o">.</span><span class="n">DOTALL</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">{</span><span class="s2">"action"</span><span class="p">:</span> <span class="n">actions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span> <span class="o">**</span><span class="n">response</span><span class="p">}</span>
-        <span class="k">raise</span> <span class="n">FormatError</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">render_template</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">format_error_template</span><span class="p">,</span> <span class="n">actions</span><span class="o">=</span><span class="n">actions</span><span class="p">))</span>
+
+        <span class="c1"># Create format error message using legacy Jinja2 rendering</span>
+        <span class="c1"># (since FormatError expects a string exception message)</span>
+        <span class="n">template_vars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_template_arguments</span><span class="p">(</span><span class="n">actions</span><span class="o">=</span><span class="n">actions</span><span class="p">)</span>
+        <span class="n">error_message</span> <span class="o">=</span> <span class="n">Template</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">format_error_template</span><span class="p">,</span> <span class="n">undefined</span><span class="o">=</span><span class="n">StrictUndefined</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="o">**</span><span class="n">template_vars</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">FormatError</span><span class="p">(</span><span class="n">error_message</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">execute_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">action</span><span class="p">[</span><span class="s2">"action"</span><span class="p">])</span>
         <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">TimeoutExpired</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="n">output</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">"replace"</span><span class="p">)</span> <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">output</span> <span class="k">else</span> <span class="s2">""</span>
-            <span class="k">raise</span> <span class="n">ExecutionTimeoutError</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">render_template</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">timeout_template</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="n">output</span><span class="p">)</span>
-            <span class="p">)</span>
+            <span class="n">template_vars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_template_arguments</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="n">output</span><span class="p">)</span>
+            <span class="n">error_message</span> <span class="o">=</span> <span class="n">Template</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">timeout_template</span><span class="p">,</span> <span class="n">undefined</span><span class="o">=</span><span class="n">StrictUndefined</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="o">**</span><span class="n">template_vars</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">ExecutionTimeoutError</span><span class="p">(</span><span class="n">error_message</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">TimeoutError</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">ExecutionTimeoutError</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">render_template</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">timeout_template</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="s2">""</span><span class="p">))</span>
+            <span class="n">template_vars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_template_arguments</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="s2">""</span><span class="p">)</span>
+            <span class="n">error_message</span> <span class="o">=</span> <span class="n">Template</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">timeout_template</span><span class="p">,</span> <span class="n">undefined</span><span class="o">=</span><span class="n">StrictUndefined</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="o">**</span><span class="n">template_vars</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">ExecutionTimeoutError</span><span class="p">(</span><span class="n">error_message</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">has_finished</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">output</span>
 
@@ -2765,12 +2782,12 @@
 
                   <details class="quote">
                     <summary>Source code in <code>src/minisweagent/agents/default.py</code></summary>
-                    <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">57</span>
-<span class="normal">58</span>
+                    <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">58</span>
 <span class="normal">59</span>
 <span class="normal">60</span>
 <span class="normal">61</span>
-<span class="normal">62</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">Environment</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">config_class</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">AgentConfig</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="normal">62</span>
+<span class="normal">63</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">Environment</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">config_class</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">AgentConfig</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config_class</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">messages</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
@@ -2905,28 +2922,34 @@
 <div class="doc doc-object doc-function">
 
 
-<h3 id="minisweagent.agents.default.DefaultAgent.render_template" class="doc doc-heading">
-<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <span class="doc doc-object-name doc-function-name">render_template</span>
+<h3 id="minisweagent.agents.default.DefaultAgent.get_template_arguments" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <span class="doc doc-object-name doc-function-name">get_template_arguments</span>
 
 
 </h3>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">render_template</span><span class="p">(</span><span class="n">template</span><span class="p">:</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="str">str</span></span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">get_template_arguments</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="dict">dict</span></span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
 
+        <p>Get all template arguments by merging config, env, model, and extra vars.</p>
+
 
             <details class="quote">
               <summary>Source code in <code>src/minisweagent/agents/default.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">64</span>
-<span class="normal">65</span>
+              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">65</span>
 <span class="normal">66</span>
 <span class="normal">67</span>
-<span class="normal">68</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">render_template</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_template_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Get all template arguments by merging config, env, model, and extra vars."""</span>
     <span class="n">template_vars</span> <span class="o">=</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">)</span> <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">get_template_vars</span><span class="p">()</span> <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">get_template_vars</span><span class="p">()</span>
-    <span class="k">return</span> <span class="n">Template</span><span class="p">(</span><span class="n">template</span><span class="p">,</span> <span class="n">undefined</span><span class="o">=</span><span class="n">StrictUndefined</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(</span>
-        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span> <span class="o">**</span><span class="n">template_vars</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">extra_template_vars</span>
-    <span class="p">)</span>
+    <span class="n">all_vars</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">template_vars</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">extra_template_vars</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">}</span>
+
+    <span class="c1"># Convert Path objects to strings for JSON serialization</span>
+    <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">Path</span><span class="p">)</span> <span class="k">else</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">all_vars</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
 </code></pre></div></td></tr></tbody></table></div>
             </details>
     </div>
@@ -2941,16 +2964,20 @@
 
 
 </h3>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">add_message</span><span class="p">(</span><span class="n">role</span><span class="p">:</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">content</span><span class="p">:</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">add_message</span><span class="p">(</span><span class="n">role</span><span class="p">:</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">content</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="dict">dict</span></span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
 
+        <p>Add a message with either string content or template content blocks.</p>
+
 
             <details class="quote">
               <summary>Source code in <code>src/minisweagent/agents/default.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">70</span>
-<span class="normal">71</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">add_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">role</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">content</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">add_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">role</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">content</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Add a message with either string content or template content blocks."""</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">"role"</span><span class="p">:</span> <span class="n">role</span><span class="p">,</span> <span class="s2">"content"</span><span class="p">:</span> <span class="n">content</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">})</span>
 </code></pre></div></td></tr></tbody></table></div>
             </details>
@@ -2976,11 +3003,7 @@
 
             <details class="quote">
               <summary>Source code in <code>src/minisweagent/agents/default.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">73</span>
-<span class="normal">74</span>
-<span class="normal">75</span>
-<span class="normal">76</span>
-<span class="normal">77</span>
+              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">77</span>
 <span class="normal">78</span>
 <span class="normal">79</span>
 <span class="normal">80</span>
@@ -2989,12 +3012,24 @@
 <span class="normal">83</span>
 <span class="normal">84</span>
 <span class="normal">85</span>
-<span class="normal">86</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="normal">86</span>
+<span class="normal">87</span>
+<span class="normal">88</span>
+<span class="normal">89</span>
+<span class="normal">90</span>
+<span class="normal">91</span>
+<span class="normal">92</span>
+<span class="normal">93</span>
+<span class="normal">94</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""Run step() until agent is finished. Return exit status &amp; message"""</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">extra_template_vars</span> <span class="o">|=</span> <span class="p">{</span><span class="s2">"task"</span><span class="p">:</span> <span class="n">task</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">}</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">messages</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">add_message</span><span class="p">(</span><span class="s2">"system"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">render_template</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">system_template</span><span class="p">))</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">add_message</span><span class="p">(</span><span class="s2">"user"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">render_template</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">instance_template</span><span class="p">))</span>
+
+    <span class="c1"># TensorZero handles system prompts via variant config, not as a message</span>
+    <span class="c1"># So we only add the user message with the task/instance template</span>
+    <span class="n">instance_args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_template_arguments</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">add_message</span><span class="p">(</span><span class="s2">"user"</span><span class="p">,</span> <span class="p">[{</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"template"</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"instance"</span><span class="p">,</span> <span class="s2">"arguments"</span><span class="p">:</span> <span class="n">instance_args</span><span class="p">}])</span>
+
     <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
@@ -3027,9 +3062,9 @@
 
             <details class="quote">
               <summary>Source code in <code>src/minisweagent/agents/default.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">88</span>
-<span class="normal">89</span>
-<span class="normal">90</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">96</span>
+<span class="normal">97</span>
+<span class="normal">98</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Query the LM, execute the action, return the observation."""</span>
     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_observation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="p">())</span>
 </code></pre></div></td></tr></tbody></table></div>
@@ -3056,13 +3091,13 @@
 
             <details class="quote">
               <summary>Source code in <code>src/minisweagent/agents/default.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">92</span>
-<span class="normal">93</span>
-<span class="normal">94</span>
-<span class="normal">95</span>
-<span class="normal">96</span>
-<span class="normal">97</span>
-<span class="normal">98</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Query the model and return the response."""</span>
     <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">step_limit</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">n_calls</span> <span class="ow">or</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">cost_limit</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">cost</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">LimitsExceeded</span><span class="p">()</span>
@@ -3093,16 +3128,20 @@
 
             <details class="quote">
               <summary>Source code in <code>src/minisweagent/agents/default.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">100</span>
-<span class="normal">101</span>
-<span class="normal">102</span>
-<span class="normal">103</span>
-<span class="normal">104</span>
-<span class="normal">105</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_observation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_observation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Execute the action and return the observation."""</span>
     <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_action</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parse_action</span><span class="p">(</span><span class="n">response</span><span class="p">))</span>
-    <span class="n">observation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">render_template</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">action_observation_template</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="n">output</span><span class="p">)</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">add_message</span><span class="p">(</span><span class="s2">"user"</span><span class="p">,</span> <span class="n">observation</span><span class="p">)</span>
+
+    <span class="c1"># Add observation message with template block</span>
+    <span class="n">observation_args</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"output"</span><span class="p">:</span> <span class="n">output</span><span class="p">}</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">add_message</span><span class="p">(</span><span class="s2">"user"</span><span class="p">,</span> <span class="p">[{</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"template"</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"action_observation"</span><span class="p">,</span> <span class="s2">"arguments"</span><span class="p">:</span> <span class="n">observation_args</span><span class="p">}])</span>
     <span class="k">return</span> <span class="n">output</span>
 </code></pre></div></td></tr></tbody></table></div>
             </details>
@@ -3128,17 +3167,27 @@
 
             <details class="quote">
               <summary>Source code in <code>src/minisweagent/agents/default.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">107</span>
-<span class="normal">108</span>
-<span class="normal">109</span>
-<span class="normal">110</span>
-<span class="normal">111</span>
-<span class="normal">112</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">parse_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">parse_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Parse the action from the message. Returns the action."""</span>
     <span class="n">actions</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s2">"```bash\s*\n(.*?)\n```"</span><span class="p">,</span> <span class="n">response</span><span class="p">[</span><span class="s2">"content"</span><span class="p">],</span> <span class="n">re</span><span class="o">.</span><span class="n">DOTALL</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">{</span><span class="s2">"action"</span><span class="p">:</span> <span class="n">actions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span> <span class="o">**</span><span class="n">response</span><span class="p">}</span>
-    <span class="k">raise</span> <span class="n">FormatError</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">render_template</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">format_error_template</span><span class="p">,</span> <span class="n">actions</span><span class="o">=</span><span class="n">actions</span><span class="p">))</span>
+
+    <span class="c1"># Create format error message using legacy Jinja2 rendering</span>
+    <span class="c1"># (since FormatError expects a string exception message)</span>
+    <span class="n">template_vars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_template_arguments</span><span class="p">(</span><span class="n">actions</span><span class="o">=</span><span class="n">actions</span><span class="p">)</span>
+    <span class="n">error_message</span> <span class="o">=</span> <span class="n">Template</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">format_error_template</span><span class="p">,</span> <span class="n">undefined</span><span class="o">=</span><span class="n">StrictUndefined</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="o">**</span><span class="n">template_vars</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="n">FormatError</span><span class="p">(</span><span class="n">error_message</span><span class="p">)</span>
 </code></pre></div></td></tr></tbody></table></div>
             </details>
     </div>
@@ -3161,27 +3210,31 @@
 
             <details class="quote">
               <summary>Source code in <code>src/minisweagent/agents/default.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">114</span>
-<span class="normal">115</span>
-<span class="normal">116</span>
-<span class="normal">117</span>
-<span class="normal">118</span>
-<span class="normal">119</span>
-<span class="normal">120</span>
-<span class="normal">121</span>
-<span class="normal">122</span>
-<span class="normal">123</span>
-<span class="normal">124</span>
-<span class="normal">125</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">execute_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">execute_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">action</span><span class="p">[</span><span class="s2">"action"</span><span class="p">])</span>
     <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">TimeoutExpired</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="n">output</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">"replace"</span><span class="p">)</span> <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">output</span> <span class="k">else</span> <span class="s2">""</span>
-        <span class="k">raise</span> <span class="n">ExecutionTimeoutError</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">render_template</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">timeout_template</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="n">output</span><span class="p">)</span>
-        <span class="p">)</span>
+        <span class="n">template_vars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_template_arguments</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="n">output</span><span class="p">)</span>
+        <span class="n">error_message</span> <span class="o">=</span> <span class="n">Template</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">timeout_template</span><span class="p">,</span> <span class="n">undefined</span><span class="o">=</span><span class="n">StrictUndefined</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="o">**</span><span class="n">template_vars</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">ExecutionTimeoutError</span><span class="p">(</span><span class="n">error_message</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">TimeoutError</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">ExecutionTimeoutError</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">render_template</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">timeout_template</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="s2">""</span><span class="p">))</span>
+        <span class="n">template_vars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_template_arguments</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="s2">""</span><span class="p">)</span>
+        <span class="n">error_message</span> <span class="o">=</span> <span class="n">Template</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">timeout_template</span><span class="p">,</span> <span class="n">undefined</span><span class="o">=</span><span class="n">StrictUndefined</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="o">**</span><span class="n">template_vars</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">ExecutionTimeoutError</span><span class="p">(</span><span class="n">error_message</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">has_finished</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">output</span>
 </code></pre></div></td></tr></tbody></table></div>
@@ -3208,11 +3261,11 @@
 
             <details class="quote">
               <summary>Source code in <code>src/minisweagent/agents/default.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">127</span>
-<span class="normal">128</span>
-<span class="normal">129</span>
-<span class="normal">130</span>
-<span class="normal">131</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">has_finished</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]):</span>
+              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">has_finished</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]):</span>
 <span class="w">    </span><span class="sd">"""Raises Submitted exception with final output if the agent has finished its task."""</span>
     <span class="n">lines</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"output"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">(</span><span class="n">keepends</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">lines</span> <span class="ow">and</span> <span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"MINI_SWE_AGENT_FINAL_OUTPUT"</span><span class="p">,</span> <span class="s2">"COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT"</span><span class="p">]:</span>
