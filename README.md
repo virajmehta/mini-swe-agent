@@ -201,6 +201,65 @@ pip install -e .
 mini [-v]
 ```
 
+## Using with TensorZero
+
+This fork uses [TensorZero](https://github.com/tensorzero/tensorzero) as the default model backend for experiment tracking, observability, and A/B testing.
+
+### Configuration
+
+The TensorZero model is now the default. To configure it:
+
+1. **Set the config file path** (optional):
+   ```bash
+   export TENSORZERO_CONFIG_PATH=/absolute/path/to/tensorzero.toml
+   ```
+   If not set, the bundled default config at `src/minisweagent/models/tensorzero/tensorzero.toml` will be used.
+
+2. **Set ClickHouse URL** (optional):
+   ```bash
+   export TENSORZERO_CLICKHOUSE_URL=http://localhost:8123
+   ```
+
+3. **Run the agent**:
+   ```bash
+   mini -t "Your task here"
+   ```
+
+### Using in GitHub Actions
+
+```yaml
+- name: Install mini-swe-agent
+  run: pip install git+https://github.com/yourusername/mini-swe-agent.git@main
+
+- name: Run agent
+  env:
+    TENSORZERO_CONFIG_PATH: ${{ github.workspace }}/tensorzero.toml
+    TENSORZERO_CLICKHOUSE_URL: ${{ secrets.CLICKHOUSE_URL }}
+  run: |
+    mini -t "Your task here"
+```
+
+### Python API
+
+```python
+from minisweagent.agents.default import DefaultAgent
+from minisweagent.models.tensorzero import TensorZeroModel
+from minisweagent.environments.local import LocalEnvironment
+
+agent = DefaultAgent(
+    TensorZeroModel(),  # Uses TENSORZERO_CONFIG_PATH or default config
+    LocalEnvironment(),
+)
+agent.run("Your task here")
+```
+
+### Changes from upstream
+
+- TensorZero is now the default model (was LitellmModel)
+- Added `TENSORZERO_CONFIG_PATH` environment variable for configuration
+- Config path resolution: env var → explicit kwarg → bundled default
+- TensorZero config files are now packaged with the distribution
+
 Read more in our [documentation](https://mini-swe-agent.com/latest/):
 
 * [Quick start guide](https://mini-swe-agent.com/latest/quickstart/)

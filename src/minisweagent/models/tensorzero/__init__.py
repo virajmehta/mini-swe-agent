@@ -22,6 +22,19 @@ class TensorZeroModel:
         # Remove model_kwargs if present since TensorZero doesn't use it
         kwargs_for_config = {k: v for k,
                              v in kwargs.items() if k != 'model_kwargs'}
+
+        # Determine config file path with priority: env var > kwarg > default bundled config
+        config_file_path = (
+            os.getenv("TENSORZERO_CONFIG_PATH") or
+            kwargs_for_config.get("config_file") or
+            str(Path(__file__).parent / "tensorzero.toml")
+        )
+        # Convert to absolute path
+        config_file_path = Path(config_file_path).resolve()
+
+        # Update kwargs with resolved path
+        kwargs_for_config["config_file"] = config_file_path
+
         self.config = TensorZeroModelConfig(**kwargs_for_config)
         self.cost = 0.0
         self.n_calls = 0

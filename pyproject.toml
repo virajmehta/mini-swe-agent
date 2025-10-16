@@ -90,7 +90,7 @@ where = ["src"]
 include = ["minisweagent*"]
 
 [tool.setuptools.package-data]
-minisweagent = ["config/**/*"]
+minisweagent = ["config/**/*", "models/tensorzero/*.toml"]
 
 [tool.ruff]
 # Exclude a variety of commonly ignored directories.

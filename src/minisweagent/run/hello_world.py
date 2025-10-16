@@ -25,7 +25,7 @@ def main(
     ),
 ) -> DefaultAgent:
     agent = DefaultAgent(
-        TensorZeroModel(config_file="/Users/viraj/tensorzero/mini-swe-agent/src/minisweagent/models/tensorzero/tensorzero.toml"),
+        TensorZeroModel(),
         LocalEnvironment(),
         **yaml.safe_load(Path(package_dir / "config" / "default.yaml").read_text())["agent"],
     )

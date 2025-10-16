@@ -111,9 +111,6 @@ def get_model_class(model_name: str, model_class: str = "") -> type:
                 _MODEL_CLASS_MAPPING})"
             raise ValueError(msg)
 
-    # Default to LitellmModel
-    from minisweagent.models.litellm_model import LitellmModel
-    if model_name.startswith("tensorzero"):
-        from minisweagent.models.tensorzero import TensorZeroModel
-        return TensorZeroModel
-    return LitellmModel
+    # Default to TensorZeroModel
+    from minisweagent.models.tensorzero import TensorZeroModel
+    return TensorZeroModel
