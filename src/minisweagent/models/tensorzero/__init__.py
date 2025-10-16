@@ -26,7 +26,7 @@ class TensorZeroModel:
         config_file_path = (
             os.getenv("TENSORZERO_CONFIG_PATH") or
             kwargs_for_config.get("config_file") or
-            str(Path(__file__).parent / "tensorzero.toml")
+            str(Path(__file__).parent / "config" / "tensorzero.toml")
         )
         # Convert to absolute path
         config_file_path = Path(config_file_path).resolve()
