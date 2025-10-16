@@ -19,14 +19,13 @@ class TensorZeroModelConfig:
 class TensorZeroModel:
     def __init__(self, **kwargs):
         # Remove model_kwargs if present since TensorZero doesn't use it
-        kwargs_for_config = {k: v for k,
-                             v in kwargs.items() if k != 'model_kwargs'}
+        kwargs_for_config = {k: v for k, v in kwargs.items() if k != "model_kwargs"}
 
         # Determine config file path with priority: env var > kwarg > default bundled config
         config_file_path = (
-            os.getenv("TENSORZERO_CONFIG_PATH") or
-            kwargs_for_config.get("config_file") or
-            str(Path(__file__).parent / "config" / "tensorzero.toml")
+            os.getenv("TENSORZERO_CONFIG_PATH")
+            or kwargs_for_config.get("config_file")
+            or str(Path(__file__).parent / "config" / "tensorzero.toml")
         )
         # Convert to absolute path
         config_file_path = Path(config_file_path).resolve()
@@ -41,18 +40,14 @@ class TensorZeroModel:
 
         # Use native TensorZero client with embedded gateway
         self.client = TensorZeroGateway.build_embedded(
-            config_file=str(self.config.config_file),
-            clickhouse_url=clickhouse_url
+            config_file=str(self.config.config_file), clickhouse_url=clickhouse_url
         )
         self.episode_id = uuid7()
 
     def query(self, messages: list[dict[str, Any]], **kwargs) -> dict:
         # Use native TensorZero inference API
         response = self.client.inference(
-            function_name="swe_agent",
-            input={"messages": messages},
-            episode_id=str(self.episode_id),
-            **kwargs
+            function_name="swe_agent", input={"messages": messages}, episode_id=str(self.episode_id), **kwargs
         )
 
         cost = 0

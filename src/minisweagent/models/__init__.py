@@ -20,8 +20,7 @@ class GlobalModelStats:
         self.cost_limit = float(os.getenv("MSWEA_GLOBAL_COST_LIMIT", "0"))
         self.call_limit = int(os.getenv("MSWEA_GLOBAL_CALL_LIMIT", "0"))
         if (self.cost_limit > 0 or self.call_limit > 0) and not os.getenv("MSWEA_SILENT_STARTUP"):
-            print(
-                f"Global cost/call limit: ${self.cost_limit:.4f} / {self.call_limit}")
+            print(f"Global cost/call limit: ${self.cost_limit:.4f} / {self.call_limit}")
 
     def add(self, cost: float) -> None:
         """Add a model call with its cost, checking limits."""
@@ -29,8 +28,7 @@ class GlobalModelStats:
             self._cost += cost
             self._n_calls += 1
         if 0 < self.cost_limit < self._cost or 0 < self.call_limit < self._n_calls + 1:
-            raise RuntimeError(
-                f"Global cost/call limit exceeded: ${self._cost:.4f} / {self._n_calls + 1}")
+            raise RuntimeError(f"Global cost/call limit exceeded: ${self._cost:.4f} / {self._n_calls + 1}")
 
     @property
     def cost(self) -> float:
@@ -52,15 +50,13 @@ def get_model(input_model_name: str | None = None, config: dict | None = None) -
     config = copy.deepcopy(config)
     config["model_name"] = resolved_model_name
 
-    model_class = get_model_class(
-        resolved_model_name, config.pop("model_class", ""))
+    model_class = get_model_class(resolved_model_name, config.pop("model_class", ""))
 
     if (from_env := os.getenv("MSWEA_MODEL_API_KEY")) and not str(type(model_class)).endswith("DeterministicModel"):
         config.setdefault("model_kwargs", {})["api_key"] = from_env
 
     if (
-        any(s in resolved_model_name.lower()
-            for s in ["anthropic", "sonnet", "opus", "claude"])
+        any(s in resolved_model_name.lower() for s in ["anthropic", "sonnet", "opus", "claude"])
         and "set_cache_control" not in config
     ):
         # Select cache control for Anthropic models by default
@@ -79,8 +75,7 @@ def get_model_name(input_model_name: str | None = None, config: dict | None = No
         return from_config
     if from_env := os.getenv("MSWEA_MODEL_NAME"):
         return from_env
-    raise ValueError(
-        "No default model set. Please run `mini-extra config setup` to set one.")
+    raise ValueError("No default model set. Please run `mini-extra config setup` to set one.")
 
 
 _MODEL_CLASS_MAPPING = {
@@ -107,10 +102,10 @@ def get_model_class(model_name: str, model_class: str = "") -> type:
             module = importlib.import_module(module_name)
             return getattr(module, class_name)
         except (ValueError, ImportError, AttributeError):
-            msg = f"Unknown model class: {model_class} (resolved to {full_path}, available: {
-                _MODEL_CLASS_MAPPING})"
+            msg = f"Unknown model class: {model_class} (resolved to {full_path}, available: {_MODEL_CLASS_MAPPING})"
             raise ValueError(msg)
 
     # Default to TensorZeroModel
     from minisweagent.models.tensorzero import TensorZeroModel
+
     return TensorZeroModel
