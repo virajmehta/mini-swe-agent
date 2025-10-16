@@ -4,6 +4,7 @@ import re
 import subprocess
 from collections.abc import Callable
 from dataclasses import asdict, dataclass
+from pathlib import Path
 
 from jinja2 import StrictUndefined, Template
 
@@ -61,21 +62,28 @@ class DefaultAgent:
         self.env = env
         self.extra_template_vars = {}
 
-    def render_template(self, template: str, **kwargs) -> str:
+    def get_template_arguments(self, **kwargs) -> dict:
+        """Get all template arguments by merging config, env, model, and extra vars."""
         template_vars = asdict(self.config) | self.env.get_template_vars() | self.model.get_template_vars()
-        return Template(template, undefined=StrictUndefined).render(
-            **kwargs, **template_vars, **self.extra_template_vars
-        )
+        all_vars = {**template_vars, **self.extra_template_vars, **kwargs}
 
-    def add_message(self, role: str, content: str, **kwargs):
+        # Convert Path objects to strings for JSON serialization
+        return {k: str(v) if isinstance(v, Path) else v for k, v in all_vars.items()}
+
+    def add_message(self, role: str, content: str | list[dict], **kwargs):
+        """Add a message with either string content or template content blocks."""
         self.messages.append({"role": role, "content": content, **kwargs})
 
     def run(self, task: str, **kwargs) -> tuple[str, str]:
         """Run step() until agent is finished. Return exit status & message"""
         self.extra_template_vars |= {"task": task, **kwargs}
         self.messages = []
-        self.add_message("system", self.render_template(self.config.system_template))
-        self.add_message("user", self.render_template(self.config.instance_template))
+
+        # TensorZero handles system prompts via variant config, not as a message
+        # So we only add the user message with the task/instance template
+        instance_args = self.get_template_arguments()
+        self.add_message("user", [{"type": "template", "name": "instance", "arguments": instance_args}])
+
         while True:
             try:
                 self.step()
@@ -100,8 +108,10 @@ class DefaultAgent:
     def get_observation(self, response: dict) -> dict:
         """Execute the action and return the observation."""
         output = self.execute_action(self.parse_action(response))
-        observation = self.render_template(self.config.action_observation_template, output=output)
-        self.add_message("user", observation)
+
+        # Add observation message with template block
+        observation_args = {"output": output}
+        self.add_message("user", [{"type": "template", "name": "action_observation", "arguments": observation_args}])
         return output
 
     def parse_action(self, response: dict) -> dict:
@@ -109,18 +119,25 @@ class DefaultAgent:
         actions = re.findall(r"```bash\s*\n(.*?)\n```", response["content"], re.DOTALL)
         if len(actions) == 1:
             return {"action": actions[0].strip(), **response}
-        raise FormatError(self.render_template(self.config.format_error_template, actions=actions))
+
+        # Create format error message using legacy Jinja2 rendering
+        # (since FormatError expects a string exception message)
+        template_vars = self.get_template_arguments(actions=actions)
+        error_message = Template(self.config.format_error_template, undefined=StrictUndefined).render(**template_vars)
+        raise FormatError(error_message)
 
     def execute_action(self, action: dict) -> dict:
         try:
             output = self.env.execute(action["action"])
         except subprocess.TimeoutExpired as e:
             output = e.output.decode("utf-8", errors="replace") if e.output else ""
-            raise ExecutionTimeoutError(
-                self.render_template(self.config.timeout_template, action=action, output=output)
-            )
+            template_vars = self.get_template_arguments(action=action, output=output)
+            error_message = Template(self.config.timeout_template, undefined=StrictUndefined).render(**template_vars)
+            raise ExecutionTimeoutError(error_message)
         except TimeoutError:
-            raise ExecutionTimeoutError(self.render_template(self.config.timeout_template, action=action, output=""))
+            template_vars = self.get_template_arguments(action=action, output="")
+            error_message = Template(self.config.timeout_template, undefined=StrictUndefined).render(**template_vars)
+            raise ExecutionTimeoutError(error_message)
         self.has_finished(output)
         return output
 
