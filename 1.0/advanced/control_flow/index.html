@@ -1885,7 +1885,8 @@
     <span class="n">system_template</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"You are a helpful assistant that can do anything."</span>
     <span class="n">instance_template</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="p">(</span>
         <span class="s2">"Your task: {{task}}. Please reply with a single shell command in triple backticks. "</span>
-        <span class="s2">"To finish, the first line of the output of the shell command must be 'COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT'."</span>
+        <span class="s2">"To finish, the first line of the output of the shell command must be 'COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT'. "</span>
+        <span class="s2">"If a command needs more time, add '# timeout: &lt;seconds&gt;' on the first line (max {{max_timeout}} seconds)."</span>
     <span class="p">)</span>
     <span class="n">timeout_template</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="p">(</span>
         <span class="s2">"The last command &lt;command&gt;{{action['action']}}&lt;/command&gt; timed out and has been killed.</span><span class="se">\n</span><span class="s2">"</span>
@@ -1896,6 +1897,7 @@
     <span class="n">action_observation_template</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"Observation: {{output}}"</span>
     <span class="n">step_limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">cost_limit</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">3.0</span>
+    <span class="n">max_timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">300</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">NonTerminatingException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
@@ -1986,7 +1988,19 @@
 <span class="w">        </span><span class="sd">"""Parse the action from the message. Returns the action."""</span>
         <span class="n">actions</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s2">"```bash\s*\n(.*?)\n```"</span><span class="p">,</span> <span class="n">response</span><span class="p">[</span><span class="s2">"content"</span><span class="p">],</span> <span class="n">re</span><span class="o">.</span><span class="n">DOTALL</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">{</span><span class="s2">"action"</span><span class="p">:</span> <span class="n">actions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span> <span class="o">**</span><span class="n">response</span><span class="p">}</span>
+            <span class="n">action_text</span> <span class="o">=</span> <span class="n">actions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="n">timeout</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="c1"># Check for timeout comment on the first line</span>
+            <span class="n">timeout_match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^#\s*timeout:\s*(\d+)\s*\n"</span><span class="p">,</span> <span class="n">action_text</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">timeout_match</span><span class="p">:</span>
+                <span class="n">requested_timeout</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">timeout_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+                <span class="c1"># Cap at max_timeout</span>
+                <span class="n">timeout</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">requested_timeout</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">max_timeout</span><span class="p">)</span>
+                <span class="c1"># Remove the timeout comment from the action</span>
+                <span class="n">action_text</span> <span class="o">=</span> <span class="n">action_text</span><span class="p">[</span><span class="n">timeout_match</span><span class="o">.</span><span class="n">end</span><span class="p">():]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+            <span class="k">return</span> <span class="p">{</span><span class="s2">"action"</span><span class="p">:</span> <span class="n">action_text</span><span class="p">,</span> <span class="s2">"timeout"</span><span class="p">:</span> <span class="n">timeout</span><span class="p">,</span> <span class="o">**</span><span class="n">response</span><span class="p">}</span>
 
         <span class="c1"># Create format error message using legacy Jinja2 rendering</span>
         <span class="c1"># (since FormatError expects a string exception message)</span>
@@ -1996,7 +2010,7 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">execute_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">action</span><span class="p">[</span><span class="s2">"action"</span><span class="p">])</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">action</span><span class="p">[</span><span class="s2">"action"</span><span class="p">],</span> <span class="n">timeout</span><span class="o">=</span><span class="n">action</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"timeout"</span><span class="p">))</span>
         <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">TimeoutExpired</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="n">output</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">"replace"</span><span class="p">)</span> <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">output</span> <span class="k">else</span> <span class="s2">""</span>
             <span class="n">template_vars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_template_arguments</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="n">output</span><span class="p">)</span>
