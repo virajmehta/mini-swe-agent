@@ -2088,6 +2088,7 @@
     <span class="n">cost_limit</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">typer</span><span class="o">.</span><span class="n">Option</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">"-l"</span><span class="p">,</span> <span class="s2">"--cost-limit"</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"Cost limit. Set to 0 to disable."</span><span class="p">),</span>
     <span class="n">config_spec</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">typer</span><span class="o">.</span><span class="n">Option</span><span class="p">(</span><span class="n">DEFAULT_CONFIG</span><span class="p">,</span> <span class="s2">"-c"</span><span class="p">,</span> <span class="s2">"--config"</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"Path to config file"</span><span class="p">),</span>
     <span class="n">output</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">typer</span><span class="o">.</span><span class="n">Option</span><span class="p">(</span><span class="n">DEFAULT_OUTPUT</span><span class="p">,</span> <span class="s2">"-o"</span><span class="p">,</span> <span class="s2">"--output"</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"Output trajectory file"</span><span class="p">),</span>
+    <span class="n">tag</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">typer</span><span class="o">.</span><span class="n">Option</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">"--tag"</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"Key-value tags for inference calls (format: KEY=VALUE, repeatable)"</span><span class="p">),</span>
     <span class="n">exit_immediately</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">typer</span><span class="o">.</span><span class="n">Option</span><span class="p">(</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">"--exit-immediately"</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"Exit immediately when the agent wants to finish instead of prompting."</span><span class="p">,</span> <span class="n">rich_help_panel</span><span class="o">=</span><span class="s2">"Advanced"</span><span class="p">),</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
     <span class="c1"># fmt: on</span>
@@ -2117,6 +2118,20 @@
         <span class="n">config</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"agent"</span><span class="p">,</span> <span class="p">{})[</span><span class="s2">"confirm_exit"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="k">if</span> <span class="n">model_class</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">config</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"model"</span><span class="p">,</span> <span class="p">{})[</span><span class="s2">"model_class"</span><span class="p">]</span> <span class="o">=</span> <span class="n">model_class</span>
+
+    <span class="c1"># Parse tags from CLI</span>
+    <span class="n">tags_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">tag</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">tag_str</span> <span class="ow">in</span> <span class="n">tag</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">"="</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tag_str</span><span class="p">:</span>
+                <span class="n">console</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"[bold red]Error:[/bold red] Invalid tag format '</span><span class="si">{</span><span class="n">tag_str</span><span class="si">}</span><span class="s2">'. Expected KEY=VALUE"</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">typer</span><span class="o">.</span><span class="n">Exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">tag_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"="</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">tags_dict</span><span class="p">[</span><span class="n">key</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">tags_dict</span><span class="p">:</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"model"</span><span class="p">,</span> <span class="p">{})[</span><span class="s2">"tags"</span><span class="p">]</span> <span class="o">=</span> <span class="n">tags_dict</span>
+
     <span class="n">model</span> <span class="o">=</span> <span class="n">get_model</span><span class="p">(</span><span class="n">model_name</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"model"</span><span class="p">,</span> <span class="p">{}))</span>
     <span class="n">env</span> <span class="o">=</span> <span class="n">LocalEnvironment</span><span class="p">(</span><span class="o">**</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"env"</span><span class="p">,</span> <span class="p">{}))</span>
 
@@ -2366,6 +2381,11 @@
         <span class="s2">"--output"</span><span class="p">,</span>
         <span class="n"><span title="typer.Option(help)">help</span></span><span class="o">=</span><span class="s2">"Output trajectory file"</span><span class="p">,</span>
     <span class="p">),</span>
+    <span class="n">tag</span><span class="p">:</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n"><span title="typer.Option">Option</span></span><span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"--tag"</span><span class="p">,</span>
+        <span class="n"><span title="typer.Option(help)">help</span></span><span class="o">=</span><span class="s2">"Key-value tags for inference calls (format: KEY=VALUE, repeatable)"</span><span class="p">,</span>
+    <span class="p">),</span>
     <span class="n">exit_immediately</span><span class="p">:</span> <span class="n"><span title="bool">bool</span></span> <span class="o">=</span> <span class="n"><span title="typer.Option">Option</span></span><span class="p">(</span>
         <span class="kc">False</span><span class="p">,</span>
         <span class="s2">"--exit-immediately"</span><span class="p">,</span>
@@ -2438,7 +2458,22 @@
 <span class="normal">102</span>
 <span class="normal">103</span>
 <span class="normal">104</span>
-<span class="normal">105</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@app</span><span class="o">.</span><span class="n">command</span><span class="p">(</span><span class="n">help</span><span class="o">=</span><span class="n">_HELP_TEXT</span><span class="p">)</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@app</span><span class="o">.</span><span class="n">command</span><span class="p">(</span><span class="n">help</span><span class="o">=</span><span class="n">_HELP_TEXT</span><span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span>
     <span class="n">visual</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">typer</span><span class="o">.</span><span class="n">Option</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="s2">"-v"</span><span class="p">,</span> <span class="s2">"--visual"</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"Toggle (pager-style) UI (Textual) depending on the MSWEA_VISUAL_MODE_DEFAULT environment setting"</span><span class="p">,),</span>
     <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">typer</span><span class="o">.</span><span class="n">Option</span><span class="p">(</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">"-m"</span><span class="p">,</span> <span class="s2">"--model"</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"Model to use"</span><span class="p">,),</span>
@@ -2448,6 +2483,7 @@
     <span class="n">cost_limit</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">typer</span><span class="o">.</span><span class="n">Option</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">"-l"</span><span class="p">,</span> <span class="s2">"--cost-limit"</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"Cost limit. Set to 0 to disable."</span><span class="p">),</span>
     <span class="n">config_spec</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">typer</span><span class="o">.</span><span class="n">Option</span><span class="p">(</span><span class="n">DEFAULT_CONFIG</span><span class="p">,</span> <span class="s2">"-c"</span><span class="p">,</span> <span class="s2">"--config"</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"Path to config file"</span><span class="p">),</span>
     <span class="n">output</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">typer</span><span class="o">.</span><span class="n">Option</span><span class="p">(</span><span class="n">DEFAULT_OUTPUT</span><span class="p">,</span> <span class="s2">"-o"</span><span class="p">,</span> <span class="s2">"--output"</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"Output trajectory file"</span><span class="p">),</span>
+    <span class="n">tag</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">typer</span><span class="o">.</span><span class="n">Option</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">"--tag"</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"Key-value tags for inference calls (format: KEY=VALUE, repeatable)"</span><span class="p">),</span>
     <span class="n">exit_immediately</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">typer</span><span class="o">.</span><span class="n">Option</span><span class="p">(</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">"--exit-immediately"</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"Exit immediately when the agent wants to finish instead of prompting."</span><span class="p">,</span> <span class="n">rich_help_panel</span><span class="o">=</span><span class="s2">"Advanced"</span><span class="p">),</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
     <span class="c1"># fmt: on</span>
@@ -2477,6 +2513,20 @@
         <span class="n">config</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"agent"</span><span class="p">,</span> <span class="p">{})[</span><span class="s2">"confirm_exit"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="k">if</span> <span class="n">model_class</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">config</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"model"</span><span class="p">,</span> <span class="p">{})[</span><span class="s2">"model_class"</span><span class="p">]</span> <span class="o">=</span> <span class="n">model_class</span>
+
+    <span class="c1"># Parse tags from CLI</span>
+    <span class="n">tags_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">tag</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">tag_str</span> <span class="ow">in</span> <span class="n">tag</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">"="</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tag_str</span><span class="p">:</span>
+                <span class="n">console</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"[bold red]Error:[/bold red] Invalid tag format '</span><span class="si">{</span><span class="n">tag_str</span><span class="si">}</span><span class="s2">'. Expected KEY=VALUE"</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">typer</span><span class="o">.</span><span class="n">Exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">tag_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"="</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">tags_dict</span><span class="p">[</span><span class="n">key</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">tags_dict</span><span class="p">:</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"model"</span><span class="p">,</span> <span class="p">{})[</span><span class="s2">"tags"</span><span class="p">]</span> <span class="o">=</span> <span class="n">tags_dict</span>
+
     <span class="n">model</span> <span class="o">=</span> <span class="n">get_model</span><span class="p">(</span><span class="n">model_name</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"model"</span><span class="p">,</span> <span class="p">{}))</span>
     <span class="n">env</span> <span class="o">=</span> <span class="n">LocalEnvironment</span><span class="p">(</span><span class="o">**</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"env"</span><span class="p">,</span> <span class="p">{}))</span>
 
