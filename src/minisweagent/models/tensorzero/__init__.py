@@ -18,8 +18,12 @@ class TensorZeroModelConfig:
 
 class TensorZeroModel:
     def __init__(self, **kwargs):
+        # Extract tags if provided
+        self.tags = kwargs.pop("tags", {})
+
         # Remove model_kwargs if present since TensorZero doesn't use it
-        kwargs_for_config = {k: v for k, v in kwargs.items() if k != "model_kwargs"}
+        kwargs_for_config = {k: v for k,
+                             v in kwargs.items() if k != "model_kwargs"}
 
         # Determine config file path with priority: env var > kwarg > default bundled config
         config_file_path = (
@@ -46,8 +50,10 @@ class TensorZeroModel:
 
     def query(self, messages: list[dict[str, Any]], **kwargs) -> dict:
         # Use native TensorZero inference API
+        inference_kwargs = {"tags": self.tags} if self.tags else {}
+        inference_kwargs.update(kwargs)
         response = self.client.inference(
-            function_name="swe_agent", input={"messages": messages}, episode_id=str(self.episode_id), **kwargs
+            function_name="swe_agent", input={"messages": messages}, episode_id=str(self.episode_id), **inference_kwargs
         )
 
         cost = 0

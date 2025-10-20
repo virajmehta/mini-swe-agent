@@ -54,6 +54,7 @@ def main(
     cost_limit: float | None = typer.Option(None, "-l", "--cost-limit", help="Cost limit. Set to 0 to disable."),
     config_spec: Path = typer.Option(DEFAULT_CONFIG, "-c", "--config", help="Path to config file"),
     output: Path | None = typer.Option(DEFAULT_OUTPUT, "-o", "--output", help="Output trajectory file"),
+    tag: list[str] | None = typer.Option(None, "--tag", help="Key-value tags for inference calls (format: KEY=VALUE, repeatable)"),
     exit_immediately: bool = typer.Option( False, "--exit-immediately", help="Exit immediately when the agent wants to finish instead of prompting.", rich_help_panel="Advanced"),
 ) -> Any:
     # fmt: on
@@ -83,6 +84,20 @@ def main(
         config.setdefault("agent", {})["confirm_exit"] = False
     if model_class is not None:
         config.setdefault("model", {})["model_class"] = model_class
+
+    # Parse tags from CLI
+    tags_dict = {}
+    if tag:
+        for tag_str in tag:
+            if "=" not in tag_str:
+                console.print(f"[bold red]Error:[/bold red] Invalid tag format '{tag_str}'. Expected KEY=VALUE")
+                raise typer.Exit(1)
+            key, value = tag_str.split("=", 1)
+            tags_dict[key.strip()] = value.strip()
+
+    if tags_dict:
+        config.setdefault("model", {})["tags"] = tags_dict
+
     model = get_model(model_name, config.get("model", {}))
     env = LocalEnvironment(**config.get("env", {}))
 
