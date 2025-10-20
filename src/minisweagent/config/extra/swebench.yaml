@@ -211,6 +211,7 @@ agent:
     submit your solution (you will not be able to continue working on this task after that).
   step_limit: 250
   cost_limit: 3.
+  max_timeout: 300
 
 environment:
   cwd: "/testbed"

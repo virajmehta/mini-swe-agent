@@ -7,6 +7,14 @@ from typing import Any
 from minisweagent import Agent, __version__
 
 
+class PathEncoder(json.JSONEncoder):
+    """JSON encoder that converts Path objects to strings."""
+    def default(self, obj):
+        if isinstance(obj, Path):
+            return str(obj)
+        return super().default(obj)
+
+
 def _get_class_name_with_module(obj: Any) -> str:
     """Get the full class name with module path."""
     return f"{obj.__class__.__module__}.{obj.__class__.__name__}"
@@ -71,6 +79,6 @@ def save_traj(
         data["info"].update(extra_info)
 
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, indent=2))
+    path.write_text(json.dumps(data, indent=2, cls=PathEncoder))
     if print_path:
         print_fct(f"Saved trajectory to '{path}'")
