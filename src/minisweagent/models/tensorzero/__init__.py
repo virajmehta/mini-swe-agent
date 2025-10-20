@@ -21,9 +21,9 @@ class TensorZeroModel:
         # Extract tags if provided
         self.tags = kwargs.pop("tags", {})
 
-        # Remove model_kwargs if present since TensorZero doesn't use it
-        kwargs_for_config = {k: v for k,
-                             v in kwargs.items() if k != "model_kwargs"}
+        # Remove model_kwargs and model_name if present since TensorZero doesn't use them
+        kwargs_for_config = {k: v for k, v in kwargs.items()
+                             if k not in ("model_kwargs", "model_name")}
 
         # Determine config file path with priority: env var > kwarg > default bundled config
         config_file_path = (
