@@ -17,7 +17,8 @@ class AgentConfig:
     system_template: str = "You are a helpful assistant that can do anything."
     instance_template: str = (
         "Your task: {{task}}. Please reply with a single shell command in triple backticks. "
-        "To finish, the first line of the output of the shell command must be 'COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT'."
+        "To finish, the first line of the output of the shell command must be 'COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT'. "
+        "If a command needs more time, add '# timeout: <seconds>' on the first line (max {{max_timeout}} seconds)."
     )
     timeout_template: str = (
         "The last command <command>{{action['action']}}</command> timed out and has been killed.\n"
@@ -28,6 +29,7 @@ class AgentConfig:
     action_observation_template: str = "Observation: {{output}}"
     step_limit: int = 0
     cost_limit: float = 3.0
+    max_timeout: int = 300
 
 
 class NonTerminatingException(Exception):
@@ -118,7 +120,19 @@ class DefaultAgent:
         """Parse the action from the message. Returns the action."""
         actions = re.findall(r"```bash\s*\n(.*?)\n```", response["content"], re.DOTALL)
         if len(actions) == 1:
-            return {"action": actions[0].strip(), **response}
+            action_text = actions[0].strip()
+            timeout = None
+
+            # Check for timeout comment on the first line
+            timeout_match = re.match(r"^#\s*timeout:\s*(\d+)\s*\n", action_text)
+            if timeout_match:
+                requested_timeout = int(timeout_match.group(1))
+                # Cap at max_timeout
+                timeout = min(requested_timeout, self.config.max_timeout)
+                # Remove the timeout comment from the action
+                action_text = action_text[timeout_match.end():].strip()
+
+            return {"action": action_text, "timeout": timeout, **response}
 
         # Create format error message using legacy Jinja2 rendering
         # (since FormatError expects a string exception message)
@@ -128,7 +142,7 @@ class DefaultAgent:
 
     def execute_action(self, action: dict) -> dict:
         try:
-            output = self.env.execute(action["action"])
+            output = self.env.execute(action["action"], timeout=action.get("timeout"))
         except subprocess.TimeoutExpired as e:
             output = e.output.decode("utf-8", errors="replace") if e.output else ""
             template_vars = self.get_template_arguments(action=action, output=output)
