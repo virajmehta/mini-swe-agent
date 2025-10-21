@@ -67,10 +67,14 @@ def save_traj(
         data["info"]["model_stats"]["instance_cost"] = agent.model.cost
         data["info"]["model_stats"]["api_calls"] = agent.model.n_calls
         data["messages"] = agent.messages
+        # Filter out sensitive environment variables from the environment config
+        env_config = _asdict(agent.env.config)
+        env_config.pop("env", None)
+        env_config.pop("forward_env", None)
         data["info"]["config"] = {
             "agent": _asdict(agent.config),
             "model": _asdict(agent.model.config),
-            "environment": _asdict(agent.env.config),
+            "environment": env_config,
             "agent_type": _get_class_name_with_module(agent),
             "model_type": _get_class_name_with_module(agent.model),
             "environment_type": _get_class_name_with_module(agent.env),
