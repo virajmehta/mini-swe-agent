@@ -23,7 +23,8 @@ class AgentConfig:
     timeout_template: str = (
         "The last command <command>{{action['action']}}</command> timed out and has been killed.\n"
         "The output of the command was:\n <output>\n{{output}}\n</output>\n"
-        "Please try another command and make sure to avoid those requiring interactive input."
+        "Please try another command and make sure to avoid those requiring interactive input.\n"
+        "If a command needs more time, add '# timeout: <seconds>' on the first line (max {{max_timeout}} seconds)."
     )
     format_error_template: str = "Please always provide EXACTLY ONE action in triple backticks."
     action_observation_template: str = "Observation: {{output}}"

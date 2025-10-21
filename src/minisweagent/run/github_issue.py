@@ -14,7 +14,8 @@ from minisweagent.models import get_model
 from minisweagent.run.extra.config import configure_if_first_time
 from minisweagent.run.utils.save import save_traj
 
-DEFAULT_CONFIG = Path(os.getenv("MSWEA_GITHUB_CONFIG_PATH", builtin_config_dir / "github_issue.yaml"))
+DEFAULT_CONFIG = Path(os.getenv("MSWEA_GITHUB_CONFIG_PATH",
+                      builtin_config_dir / "github_issue.yaml"))
 console = Console(highlight=False)
 app = typer.Typer(rich_markup_mode="rich", add_completion=False)
 
@@ -22,7 +23,8 @@ app = typer.Typer(rich_markup_mode="rich", add_completion=False)
 def fetch_github_issue(issue_url: str) -> str:
     """Fetch GitHub issue text from the URL."""
     # Convert GitHub issue URL to API URL
-    api_url = issue_url.replace("github.com", "api.github.com/repos").replace("/issues/", "/issues/")
+    api_url = issue_url.replace(
+        "github.com", "api.github.com/repos").replace("/issues/", "/issues/")
 
     headers = {}
     if github_token := os.getenv("GITHUB_TOKEN"):
@@ -51,7 +53,8 @@ def main(
     configure_if_first_time()
 
     config_path = get_config_path(config)
-    console.print(f"Loading agent config from [bold green]'{config_path}'[/bold green]")
+    console.print(f"Loading agent config from [bold green]'{
+                  config_path}'[/bold green]")
     _config = yaml.safe_load(config_path.read_text())
     _agent_config = _config.setdefault("agent", {})
     if yolo:
@@ -69,7 +72,8 @@ def main(
 
     repo_url = issue_url.split("/issues/")[0]
     if github_token := os.getenv("GITHUB_TOKEN"):
-        repo_url = repo_url.replace("https://github.com/", f"https://{github_token}@github.com/") + ".git"
+        repo_url = repo_url.replace(
+            "https://github.com/", f"https://{github_token}@github.com/") + ".git"
 
     agent.env.execute(f"git clone {repo_url} /testbed", cwd="/")
 
@@ -79,7 +83,8 @@ def main(
     except KeyboardInterrupt:
         console.print("\n[bold red]KeyboardInterrupt -- goodbye[/bold red]")
     finally:
-        save_traj(agent, Path("traj.json"), exit_status=exit_status, result=result)
+        save_traj(agent, Path("traj.json"),
+                  exit_status=exit_status, result=result)
     return agent
 
 
