@@ -1891,7 +1891,8 @@
     <span class="n">timeout_template</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="p">(</span>
         <span class="s2">"The last command &lt;command&gt;{{action['action']}}&lt;/command&gt; timed out and has been killed.</span><span class="se">\n</span><span class="s2">"</span>
         <span class="s2">"The output of the command was:</span><span class="se">\n</span><span class="s2"> &lt;output&gt;</span><span class="se">\n</span><span class="s2">{{output}}</span><span class="se">\n</span><span class="s2">&lt;/output&gt;</span><span class="se">\n</span><span class="s2">"</span>
-        <span class="s2">"Please try another command and make sure to avoid those requiring interactive input."</span>
+        <span class="s2">"Please try another command and make sure to avoid those requiring interactive input.</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"If a command needs more time, add '# timeout: &lt;seconds&gt;' on the first line (max {{max_timeout}} seconds)."</span>
     <span class="p">)</span>
     <span class="n">format_error_template</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"Please always provide EXACTLY ONE action in triple backticks."</span>
     <span class="n">action_observation_template</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"Observation: {{output}}"</span>
