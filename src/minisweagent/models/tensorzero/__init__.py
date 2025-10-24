@@ -65,6 +65,9 @@ class TensorZeroModel:
         content = response.content[0].text if response.content else ""
         print("Agent: ", content)
 
+        # Write episode_id to .episode_id file
+        Path(".episode_id").write_text(str(self.episode_id))
+
         return {
             "content": content,
         }
