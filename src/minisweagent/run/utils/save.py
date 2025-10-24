@@ -66,6 +66,8 @@ def save_traj(
     if agent is not None:
         data["info"]["model_stats"]["instance_cost"] = agent.model.cost
         data["info"]["model_stats"]["api_calls"] = agent.model.n_calls
+        if hasattr(agent.model, 'episode_id'):
+            data["info"]["episode_id"] = str(agent.model.episode_id)
         data["messages"] = agent.messages
         # Filter out sensitive environment variables from the environment config
         env_config = _asdict(agent.env.config)
