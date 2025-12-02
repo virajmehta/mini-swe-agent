@@ -21,31 +21,41 @@ class TensorZeroModel:
         # Extract tags if provided
         self.tags = kwargs.pop("tags", {})
 
-        # Remove model_kwargs and model_name if present since TensorZero doesn't use them
-        kwargs_for_config = {k: v for k, v in kwargs.items()
-                             if k not in ("model_kwargs", "model_name")}
+        # Check for HTTP gateway mode
+        gateway_url = os.getenv("TENSORZERO_GATEWAY_URL")
 
-        # Determine config file path with priority: env var > kwarg > default bundled config
-        config_file_path = (
-            os.getenv("TENSORZERO_CONFIG_PATH")
-            or kwargs_for_config.get("config_file")
-            or str(Path(__file__).parent / "config" / "tensorzero.toml")
-        )
-        # Convert to absolute path
-        config_file_path = Path(config_file_path).resolve()
+        if gateway_url:
+            # HTTP gateway mode - config file not required
+            self.client = TensorZeroGateway.build_http(gateway_url=gateway_url)
+            self.config = None
+        else:
+            # Embedded gateway mode - existing logic
+            # Remove model_kwargs and model_name if present since TensorZero doesn't use them
+            kwargs_for_config = {k: v for k, v in kwargs.items()
+                                 if k not in ("model_kwargs", "model_name")}
 
-        # Update kwargs with resolved path
-        kwargs_for_config["config_file"] = config_file_path
+            # Determine config file path with priority: env var > kwarg > default bundled config
+            config_file_path = (
+                os.getenv("TENSORZERO_CONFIG_PATH")
+                or kwargs_for_config.get("config_file")
+                or str(Path(__file__).parent / "config" / "tensorzero.toml")
+            )
+            # Convert to absolute path
+            config_file_path = Path(config_file_path).resolve()
 
-        self.config = TensorZeroModelConfig(**kwargs_for_config)
+            # Update kwargs with resolved path
+            kwargs_for_config["config_file"] = config_file_path
+
+            self.config = TensorZeroModelConfig(**kwargs_for_config)
+            clickhouse_url = os.getenv("TENSORZERO_CLICKHOUSE_URL")
+
+            # Use native TensorZero client with embedded gateway
+            self.client = TensorZeroGateway.build_embedded(
+                config_file=str(self.config.config_file), clickhouse_url=clickhouse_url
+            )
+
         self.cost = 0.0
         self.n_calls = 0
-        clickhouse_url = os.getenv("TENSORZERO_CLICKHOUSE_URL")
-
-        # Use native TensorZero client with embedded gateway
-        self.client = TensorZeroGateway.build_embedded(
-            config_file=str(self.config.config_file), clickhouse_url=clickhouse_url
-        )
         self.episode_id = uuid7()
 
     def query(self, messages: list[dict[str, Any]], **kwargs) -> dict:
@@ -73,4 +83,7 @@ class TensorZeroModel:
         }
 
     def get_template_vars(self) -> dict[str, Any]:
-        return asdict(self.config) | {"n_model_calls": self.n_calls, "model_cost": self.cost}
+        base_vars = {"n_model_calls": self.n_calls, "model_cost": self.cost}
+        if self.config:
+            return asdict(self.config) | base_vars
+        return base_vars
