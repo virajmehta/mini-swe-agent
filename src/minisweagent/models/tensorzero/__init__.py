@@ -72,14 +72,30 @@ class TensorZeroModel:
         GLOBAL_MODEL_STATS.add(cost)
 
         # Extract content from TensorZero response
-        content = response.content[0].text if response.content else ""
-        print("Agent: ", content)
+        # Build structured content blocks and extract text for action parsing
+        content_blocks = []
+        text_content = ""
+
+        for block in response.content:
+            if block.type == "text":
+                content_blocks.append({"type": "text", "text": block.text})
+                text_content += block.text
+            elif block.type == "thought":
+                thought_block = {"type": "thought", "text": block.text}
+                # Include signature if present (required for Anthropic extended thinking round-trip)
+                if hasattr(block, "signature") and block.signature:
+                    thought_block["signature"] = block.signature
+                content_blocks.append(thought_block)
+            # Ignore unknown types for now
+
+        print("Agent: ", text_content)
 
         # Write episode_id to .episode_id file
         Path(".episode_id").write_text(str(self.episode_id))
 
         return {
-            "content": content,
+            "content": text_content,  # Plain text for action parsing
+            "content_blocks": content_blocks,  # Structured for message history
         }
 
     def get_template_vars(self) -> dict[str, Any]:

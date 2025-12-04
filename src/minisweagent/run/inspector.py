@@ -145,7 +145,13 @@ class TrajectoryInspector(App):
 
         for message in self.steps[self.i_step]:
             if isinstance(message["content"], list):
-                content_str = "\n".join([item["text"] for item in message["content"]])
+                parts = []
+                for item in message["content"]:
+                    if item.get("type") == "thought":
+                        parts.append(f"[Thought] {item['text']}")
+                    else:
+                        parts.append(item.get("text", ""))
+                content_str = "\n".join(parts)
             else:
                 content_str = str(message["content"])
             message_container = Vertical(classes="message-container")

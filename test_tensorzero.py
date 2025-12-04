@@ -19,7 +19,7 @@ def test_tensorzero_agent_fizzbuzz():
         # Configuration for TensorZero model
         model_config = {
             "model_name": "tensorzero",
-            "config_file": Path("src/minisweagent/models/tensorzero/tensorzero.toml"),
+            "config_file": Path("src/minisweagent/models/tensorzero/config/tensorzero.toml"),
         }
 
         # Initialize the model
@@ -38,12 +38,12 @@ def test_tensorzero_agent_fizzbuzz():
             You can execute bash commands to create and run Python programs.
             When you complete a task, execute: echo COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT""",
             instance_template="""Your task: {{task}}
-            
+
             Please complete this task step by step:
             1. Create the Python script
             2. Run it to verify it works
             3. When done, execute: echo COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT
-            
+
             Provide your commands in triple backticks.""",
             action_observation_template="Observation:\n{{output.output}}",
             format_error_template="Please provide exactly one command in triple backticks.",
@@ -59,7 +59,7 @@ def test_tensorzero_agent_fizzbuzz():
         - Print "Buzz" for multiples of 5
         - Print "FizzBuzz" for multiples of both 3 and 5
         - Print the number itself otherwise
-        
+
         After creating the script, run it to verify it works correctly."""
 
         print(f"\n{'=' * 60}")
