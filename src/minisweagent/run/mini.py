@@ -52,6 +52,7 @@ def main(
     task: str | None = typer.Option(None, "-t", "--task", help="Task/problem statement", show_default=False),
     yolo: bool = typer.Option(False, "-y", "--yolo", help="Run without confirmation"),
     cost_limit: float | None = typer.Option(None, "-l", "--cost-limit", help="Cost limit. Set to 0 to disable."),
+    step_limit: int | None = typer.Option(None, "-s", "--step-limit", help="Step/turn limit. Set to 0 to disable."),
     config_spec: Path = typer.Option(DEFAULT_CONFIG, "-c", "--config", help="Path to config file"),
     output: Path | None = typer.Option(DEFAULT_OUTPUT, "-o", "--output", help="Output trajectory file"),
     tag: list[str] | None = typer.Option(None, "--tag", help="Key-value tags for inference calls (format: KEY=VALUE, repeatable)"),
@@ -80,6 +81,8 @@ def main(
         config.setdefault("agent", {})["mode"] = "yolo"
     if cost_limit:
         config.setdefault("agent", {})["cost_limit"] = cost_limit
+    if step_limit:
+        config.setdefault("agent", {})["step_limit"] = step_limit
     if exit_immediately:
         config.setdefault("agent", {})["confirm_exit"] = False
     if model_class is not None:
